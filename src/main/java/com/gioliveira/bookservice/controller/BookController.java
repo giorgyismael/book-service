@@ -1,7 +1,5 @@
 package com.gioliveira.bookservice.controller;
 
-
-import java.util.HashMap;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import com.gioliveira.bookservice.model.Book;
 import com.gioliveira.bookservice.proxy.CambioProxy;
 import com.gioliveira.bookservice.repository.BookRepository;
-import com.gioliveira.bookservice.response.Cambio;
 
 import lombok.var;
 
@@ -41,6 +37,7 @@ public class BookController {
     ){
         var port = environment.getProperty("local.server.port");
         var book = bookRepository.findBookById(id);
+        if (Objects.isNull(book)) throw new IllegalStateException("Produto não encontrado");
         
         /** Utilizando RestTemplate Consulta Serviço
         HashMap<String, String> params = new HashMap<>();
@@ -54,10 +51,10 @@ public class BookController {
 
         /*Utilizanfo Feing */
         var cambio = cambioProxy.calculeCambio(book.getPrice(), "USD", currency);
-        if (Objects.isNull(book)) throw new IllegalStateException("Produto não encontrado");
        
         book.setCurrency(currency);
-        book.setEnvironment(port);
+        book.setEnvironment(
+            "BookService Port: " +port+" CambioService Port: " + cambio.getEnvironment());
         book.setPrice(cambio.getConvertedValue());
         return book;
     }
